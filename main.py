@@ -9,4 +9,4 @@ import sys
 bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
 
 bot.get_historical_datas()
-bot.run()
+bot.viz()

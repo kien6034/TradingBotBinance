@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import asyncio
 from binance import AsyncClient, BinanceSocketManager
+import mplfinance as mpf 
 
 
 
@@ -75,3 +76,16 @@ class Bot:
         return [open_time, open, high, low, close, volumn, close_time, quote_asset_volume, number_of_trades]
         
    
+    def viz(self):
+        self.hist_df['Open Time'] = pd.to_datetime(self.hist_df['Open Time']/1000, unit='s')
+        self.hist_df['Close Time'] = pd.to_datetime(self.hist_df['Close Time']/1000, unit='s')
+        numeric_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Quote Asset Volume']
+        self.hist_df[numeric_columns] = self.hist_df[numeric_columns].apply(pd.to_numeric, axis=1)
+        self.hist_df.set_index('Close Time').tail(100)
+        
+
+        mpf.plot(self.hist_df.set_index('Close Time').tail(120), 
+        type='candle', style='charles', 
+        volume=True, 
+        title='ETHBTC Last 120 Days', 
+        mav=(10,20,30), savefig = 'testimage.jpg')
