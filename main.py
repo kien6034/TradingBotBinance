@@ -1,47 +1,16 @@
-from dotenv import load_dotenv
-import os 
-
-load_dotenv()
-
-secret_key = os.getenv('BINANCE_SECRET_KEY')
-api_key = os.getenv('BINANCE_API_KEY')
-
-from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
-import pandas as pd 
-
-
-client = Client(api_key, secret_key)
-
-tickers = client.get_all_tickers()
-
-
 import asyncio
+from bot.bot import Bot 
 
-from binance import AsyncClient, BinanceSocketManager
+async def async_func():
+  
+    bot = Bot('BTCUSDT')
+    bot2 = Bot('BNBUSDT')
 
-async def order_book(client, symbol):
-    order_book = await client.get_order_book(symbol=symbol)
-    print(order_book)
+    bot2.run()
+    bot.run()
 
-
-async def kline_listener(client):
-    bm = BinanceSocketManager(client)
-    symbol = 'BNBBTC'
-    res_count = 0
-    async with bm.kline_socket(symbol=symbol) as stream:
-        while True:
-            res = await stream.recv()
-            res_count += 1
-            print(res)
-            if res_count == 5:
-                res_count = 0
-                loop.call_soon(asyncio.create_task, order_book(client, symbol))
-
-async def main(): 
-    client = await AsyncClient.create()
-    await kline_listener(client)
+loop = asyncio.get_event_loop()
+coroutine = async_func()
+loop.run_until_complete(coroutine)
 
 
-if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
