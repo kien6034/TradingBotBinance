@@ -2,19 +2,6 @@ from dotenv import load_dotenv
 import os 
 
 load_dotenv()
-
-secret_key = os.getenv('BINANCE_SECRET_KEY')
-api_key = os.getenv('BINANCE_API_KEY')
-
-from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
-import pandas as pd 
-
-
-client = Client(api_key, secret_key)
-
-tickers = client.get_all_tickers()
-
-
 import asyncio
 
 from binance import AsyncClient, BinanceSocketManager
