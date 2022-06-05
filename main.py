@@ -1,16 +1,12 @@
 import asyncio
 from bot.bot import Bot 
-
-async def async_func():
-  
-    bot = Bot('BTCUSDT')
-    bot2 = Bot('BNBUSDT')
-
-    bot2.run()
-    bot.run()
-
-loop = asyncio.get_event_loop()
-coroutine = async_func()
-loop.run_until_complete(coroutine)
+from binance.client import BaseClient
+import numpy as np
+import pandas as pd 
+import sys
 
 
+bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
+
+bot.get_historical_datas()
+bot.run()
