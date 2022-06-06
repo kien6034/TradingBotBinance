@@ -1,5 +1,5 @@
 import asyncio
-from bot.bot import Bot 
+from src.bot.bot import Bot 
 from binance.client import BaseClient
 import numpy as np
 import pandas as pd 
