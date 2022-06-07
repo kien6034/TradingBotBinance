@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd 
 import sys
 
+bot = Bot('AVAXUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
 
-bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
-
-bot.get_historical_datas()
-bot.viz()
+# bot.get_historical_datas()
+# bot.viz()
+bot.place_market_buy_order(1)

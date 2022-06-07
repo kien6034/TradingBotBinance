@@ -7,6 +7,8 @@ import sys
 bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1HOUR)
 data= bot.get_historical_datas()
 
+sys.exit()
+
 morning_star = talib.CDLMORNINGSTAR(data['Open'], data['High'], data['Low'], data['Close'])
 engulfing = talib.CDLENGULFING(data['Open'], data['High'], data['Low'], data['Close'])
 data['Morning Star'] = morning_star
