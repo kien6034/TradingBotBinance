@@ -6,4 +6,4 @@ import pandas as pd
 import sys
 
 bot = Bot('AVAXUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
-bot.run()
+bot.test()

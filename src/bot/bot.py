@@ -36,6 +36,29 @@ class Bot:
         trade_token_balance = self.client.get_asset_balance(asset = self.trade_token)
         return (trade_token_balance, base_token_balance)
 
+
+    def get_future_account_balance(self):
+        datas = self.client.futures_account_balance()
+        for data in datas:
+            if data['asset'] == self.base_token:
+                return data['balance']
+        return 0
+
+    def get_future_open_position(self):
+        print(self.client.futures_recent_trades())
+    
+    def test(self):
+        #self.client.futures_change_leverage(symbol="AVAXUSDT", leverage=5)
+        #print(self.client.futures_get_open_orders(symbol = self.symbol))
+        #self.client.futures_create_order(symbol=self.symbol, side='BUY', type='MARKET', quantity=1)
+        # print(self.client.futures_get_all_orders())
+        # self.client.futures_get_open_orders()
+        #self.client.futures_cancel_order(symbol=self.symbol, timestame=True)
+        print(        self.client.futures_account()['positions'])
+
+    def place_future_market_buy_order(self, quantity):
+        pass 
+
     def place_market_buy_order(self, quantity):
         try:
             order = self.client.order_market_buy(
