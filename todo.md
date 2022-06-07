@@ -4,3 +4,10 @@
 ## Define market trend
 
 ## Enter point
+
+
+
+#### DEfining my simple strategy 
+
+ + Using EMA and RSI 
+ + Using 

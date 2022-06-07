@@ -9,26 +9,33 @@ from binance import AsyncClient, BinanceSocketManager
 import mplfinance as mpf 
 import time
 from .utils import get_start_date
+from .strategy1 import strategy1
 
 pd.options.mode.chained_assignment = None
 
 NUM_OF_CANDLES = 60
 class Bot:
     def __init__(self, symbol, interval) -> None:
+        self.trade_token = symbol[0:-4]
+        self.base_token = symbol[-4:]
+       
         self.symbol = symbol
         self.interval = interval
         secret_key = os.getenv('BINANCE_SECRET')
         api_key = os.getenv('BINANCE_API')
         self.hist_df = None 
         self.start_date = get_start_date(interval)
-        
         self.colums= ['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 
                         'Number of Trades']
         self.client = Client(api_key, secret_key)
-        print(self.client.get_asset_balance(asset='USDT'))
         self.loop = asyncio.get_event_loop()
        
-       
+
+    def get_account_balance(self):
+        base_token_balance = self.client.get_asset_balance(asset =self.base_token) 
+        trade_token_balance = self.client.get_asset_balance(asset = self.trade_token)
+        return (trade_token_balance, base_token_balance)
+
     def place_market_buy_order(self, quantity):
         try:
             order = self.client.order_market_buy(
@@ -55,6 +62,16 @@ class Bot:
         data = self.refine_data(res)
         data_length= len(self.hist_df)
         self.hist_df.loc[data_length] = data
+        self.hist_df = self.hist_df.iloc[-60:]
+        status = strategy1(self.hist_df)
+        print("New daata added \n")
+        if status == True:
+            print("New buy order")
+            self.viz(msg="BUY")
+        elif status == False:
+            print("New sell order")
+            self.viz(msg="SELL")
+
         
    
 
@@ -72,10 +89,11 @@ class Bot:
         await self.kline_listener(client)
 
     def run(self):
+        self.get_historical_datas()
+        print(self.hist_df.tail(2))
         self.loop.run_until_complete(self.streaming())
 
     def get_historical_datas(self):
-        print("went here")
         historical = self.client.get_historical_klines(self.symbol,self.interval, self.start_date * 1000) 
         hist_df = pd.DataFrame(historical)
         '''
@@ -85,7 +103,6 @@ class Bot:
                             'Number of Trades', 'TB Base Volume', 'TB Quote Volume', 'Ignore']
 
         self.hist_df = hist_df.drop(columns=['TB Base Volume', 'TB Quote Volume', 'Ignore'])
-        print(self.hist_df)
         return self.hist_df
 
 
@@ -99,9 +116,9 @@ class Bot:
         close_time = res['k']['T']
         quote_asset_volume=  res['k']['q']
         number_of_trades = res['k']['n']
-        return [open_time, open, high, low, close, volumn, close_time, quote_asset_volume, number_of_trades]
+        return [open_time, open, high, low, close, volumn, int(close_time), quote_asset_volume, number_of_trades]
     
-    def viz(self, data= None):
+    def viz(self, data= None, msg = None):
         if data == None:
             data= self.hist_df
 
@@ -117,8 +134,9 @@ class Bot:
             pass
             os.makedirs(dirName)
 
+      
         mpf.plot(data.set_index('Close Time').tail(120), 
         type='candle', style='charles', 
         volume=True, 
         title=f"{self.symbol} Last {self.interval}", 
-        mav=(10,20,30), savefig = f"data/{self.symbol}/{data['Close Time'].iloc[-1]}.jpg")
+        mav=(10,20,30), savefig = f"data/{self.symbol}/{msg}_{data['Close Time'].iloc[-1]}.jpg")
