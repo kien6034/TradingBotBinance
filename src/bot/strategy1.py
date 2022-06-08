@@ -14,12 +14,9 @@ def strategy1(hist_df):
     # calculating ema from rsi 
     ema_short = talib.EMA(rsi_short, EMA_TIMEFRAME)
     ema_long = talib.EMA(rsi_long, EMA_TIMEFRAME) 
-    print(ema_short.iloc[-1], ema_long.iloc[-1], ema_short.iloc[-2], ema_long.iloc[-2])
-
-    print(type(ema_short.iloc[-1]))
+   
     # conditions 
     if((ema_short.iloc[-1] > ema_long.iloc[-1] and ema_short.iloc[-2] < ema_long.iloc[-2])):
-        
         return True
 
     if((ema_long.iloc[-1] > ema_short.iloc[-1] and ema_long.iloc[-2] < ema_short.iloc[-2])):

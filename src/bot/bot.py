@@ -1,5 +1,3 @@
-from distutils.log import error
-from posixpath import dirname
 import os 
 from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 import pandas as pd 
@@ -29,6 +27,9 @@ class Bot:
                         'Number of Trades']
         self.client = Client(api_key, secret_key)
         self.loop = asyncio.get_event_loop()
+
+        self.action = 0 ## 1: Longing, 2: Shorting
+        self.amount = 2
        
 
     def get_account_balance(self):
@@ -47,17 +48,17 @@ class Bot:
     def get_future_open_position(self):
         print(self.client.futures_recent_trades())
     
-    def test(self):
-        #self.client.futures_change_leverage(symbol="AVAXUSDT", leverage=5)
-        #print(self.client.futures_get_open_orders(symbol = self.symbol))
-        #self.client.futures_create_order(symbol=self.symbol, side='BUY', type='MARKET', quantity=1)
-        # print(self.client.futures_get_all_orders())
-        # self.client.futures_get_open_orders()
-        #self.client.futures_cancel_order(symbol=self.symbol, timestame=True)
-        print(        self.client.futures_account()['positions'])
-
-    def place_future_market_buy_order(self, quantity):
-        pass 
+    def create_future_market_buy_order(self, quantity):
+        try:
+            self.client.futures_create_order(symbol=self.symbol, side='BUY', type='MARKET', quantity=quantity)       
+        except:
+            print("Create order failed")
+    
+    def create_future_market_sell_order(self, quantity):
+        try:
+            self.client.futures_create_order(symbol=self.symbol, side='SELL', type='MARKET', quantity=quantity)       
+        except:
+            print("Create order failed")
 
     def place_market_buy_order(self, quantity):
         try:
@@ -87,12 +88,40 @@ class Bot:
         self.hist_df.loc[data_length] = data
         self.hist_df = self.hist_df.iloc[-60:]
         status = strategy1(self.hist_df)
-        print("New daata added \n")
+        print("New data added \n")
         if status == True:
-            print("New buy order")
+            print("------------> BUY")
+            if self.action == 1: 
+                print("-----> already in buy position")
+                return
+            if self.action == 0:
+                #todo: Get quantity herer
+                print("-----> OPEN LONG POSITON -----")
+                self.create_future_market_buy_order(quantity = self.amount)
+                self.action = 1
+            # if in buy position 
+            elif self.action == 2: 
+                print("-----> CLOSE SHORT POSITON -----")
+                self.create_future_market_buy_order(quantity = self.amount)
+                self.action = 0
+            
             self.viz(msg="BUY")
         elif status == False:
-            print("New sell order")
+            print("-----------> SELL")
+
+            if self.action == 2:
+                print("-------> already in sell position")
+                return 
+
+            if self.action == 0:
+                print("-----> OPEN SHORT POSITON -----")
+                self.create_future_market_sell_order(quantity=self.amount)
+                self.action = 2
+            elif self.action == 1: # longing 
+                print("-----> CLOSE LONG POSITON -----")
+                self.create_future_market_sell_order(quantity=self.amount)
+                self.action = 0
+
             self.viz(msg="SELL")
 
         
