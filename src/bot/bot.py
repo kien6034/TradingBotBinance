@@ -1,3 +1,4 @@
+from distutils.log import error
 import os 
 from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
 import pandas as pd 
@@ -8,6 +9,7 @@ import mplfinance as mpf
 import time
 from .utils import get_start_date
 from .strategy1 import strategy1
+import logging
 
 pd.options.mode.chained_assignment = None
 
@@ -26,10 +28,11 @@ class Bot:
         self.colums= ['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 
                         'Number of Trades']
         self.client = Client(api_key, secret_key)
-        self.loop = asyncio.get_event_loop()
-
         self.action = 0 ## 1: Longing, 2: Shorting
         self.amount = 2
+
+        logging.basicConfig(level= logging.INFO,filename='app.log', filemode='w', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+        self.loop = asyncio.get_event_loop()
        
 
     def get_account_balance(self):
@@ -51,14 +54,14 @@ class Bot:
     def create_future_market_buy_order(self, quantity):
         try:
             self.client.futures_create_order(symbol=self.symbol, side='BUY', type='MARKET', quantity=quantity)       
-        except:
-            print("Create order failed")
+        except error:
+            logging.info(f"CREATE BUY ORDER: failed {error}")
     
     def create_future_market_sell_order(self, quantity):
         try:
             self.client.futures_create_order(symbol=self.symbol, side='SELL', type='MARKET', quantity=quantity)       
         except:
-            print("Create order failed")
+            logging.info(f"CREATE SELL ORDER: failed {error}")
 
     def place_market_buy_order(self, quantity):
         try:
@@ -88,37 +91,38 @@ class Bot:
         self.hist_df.loc[data_length] = data
         self.hist_df = self.hist_df.iloc[-60:]
         status = strategy1(self.hist_df)
-        print("New data added \n")
+
+        logging.info(f"Candel Added: {res}")
         if status == True:
-            print("------------> BUY")
+            logging.info('---------> BUY')
             if self.action == 1: 
-                print("-----> already in buy position")
+                logging.info('--- Already iin longing postion')
                 return
             if self.action == 0:
                 #todo: Get quantity herer
-                print("-----> OPEN LONG POSITON -----")
+                logging.info("---> Open long position")
                 self.create_future_market_buy_order(quantity = self.amount)
                 self.action = 1
             # if in buy position 
             elif self.action == 2: 
-                print("-----> CLOSE SHORT POSITON -----")
+                logging.info("-----> Close short position")
                 self.create_future_market_buy_order(quantity = self.amount)
                 self.action = 0
             
             self.viz(msg="BUY")
         elif status == False:
-            print("-----------> SELL")
+            logging.info("-----------> SELL")
 
             if self.action == 2:
-                print("-------> already in sell position")
+                logging.info("---> already in sell position")
                 return 
 
             if self.action == 0:
-                print("-----> OPEN SHORT POSITON -----")
+                logging.info("-----> open short position")
                 self.create_future_market_sell_order(quantity=self.amount)
                 self.action = 2
             elif self.action == 1: # longing 
-                print("-----> CLOSE LONG POSITON -----")
+                logging.info("----->  Close long position")
                 self.create_future_market_sell_order(quantity=self.amount)
                 self.action = 0
 
@@ -142,7 +146,6 @@ class Bot:
 
     def run(self):
         self.get_historical_datas()
-        print(self.hist_df.tail(2))
         self.loop.run_until_complete(self.streaming())
 
     def get_historical_datas(self):
