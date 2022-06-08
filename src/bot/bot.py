@@ -13,7 +13,6 @@ import logging
 
 pd.options.mode.chained_assignment = None
 
-NUM_OF_CANDLES = 60
 class Bot:
     def __init__(self, symbol, interval) -> None:
         self.trade_token = symbol[0:-4]
@@ -173,8 +172,8 @@ class Bot:
         number_of_trades = res['k']['n']
         return [open_time, open, high, low, close, volumn, int(close_time), quote_asset_volume, number_of_trades]
     
-    def viz(self, data= None, msg = None):
-        if data == None:
+    def viz(self, data=pd.DataFrame(), msg = None, hlines = []):
+        if data.empty:
             data= self.hist_df
 
         data['Open Time'] = pd.to_datetime(data['Open Time']/1000, unit='s')
@@ -190,8 +189,13 @@ class Bot:
             os.makedirs(dirName)
 
       
-        mpf.plot(data.set_index('Close Time').tail(120), 
-        type='candle', style='charles', 
-        volume=True, 
-        title=f"{self.symbol} Last {self.interval}", 
-        mav=(10,20,30), savefig = f"data/{self.symbol}/{msg}_{data['Close Time'].iloc[-1]}.jpg")
+        mpf.plot(
+            data.set_index('Close Time').tail(120), 
+            type='candle', 
+            style='charles', 
+            volume=True, 
+            title=f"{self.symbol} Last {self.interval}", 
+            mav=(10,20,30), 
+            savefig = f"data/{self.symbol}/{msg}_{data['Close Time'].iloc[-1]}.jpg",
+            hlines=dict(hlines = hlines, linewidths=2,alpha=0.4)
+        )

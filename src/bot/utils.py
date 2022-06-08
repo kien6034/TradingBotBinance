@@ -1,6 +1,7 @@
 import time
+from .config import NUM_OF_CANDLES
 
-NUM_OF_CANDLES= 60
+
 def get_start_date(interval):
         ts = int(time.time())
         interval_type = interval[-1]
