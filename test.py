@@ -1,13 +1,21 @@
-import logging
+from urllib.parse import parse_qs
+from binance import AsyncClient, BinanceSocketManager
+from binance.client import BaseClient
 
-class Bot:
-    def __init__(self) -> None:
-        logging.basicConfig(level= logging.DEBUG,filename='app.log', filemode='w', format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+import asyncio
+async def run_it(interval):
+    client = await AsyncClient.create()
+    bm = BinanceSocketManager(client)
+    
+    async with bm.kline_socket(symbol='BTCUSDT', interval=interval) as stream:
+            while True:
+                print(f"Getting streaming data for {interval}")
+                res = await stream.recv()
+                print(res)
+
+async def main():
+    all_runs = [run_it(BaseClient.KLINE_INTERVAL_1MINUTE), run_it(BaseClient.KLINE_INTERVAL_3MINUTE)]
+    await asyncio.gather(*all_runs)
 
 
-    def log(self):
-        logging.debug('This will get logged to a file')
-
-
-bot= Bot()
-bot.log()
+asyncio.run(main())

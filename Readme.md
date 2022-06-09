@@ -13,3 +13,5 @@
 
 
 
+## Votality: ATR, Choppiness index 
+#

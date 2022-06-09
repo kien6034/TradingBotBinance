@@ -1,0 +1,36 @@
+09-Jun-22 11:11:19 - CANCEL read_loop
+09-Jun-22 11:11:19 - CANCEL read_loop
+09-Jun-22 11:11:19 - Fatal error on SSL transport
+protocol: <asyncio.sslproto.SSLProtocol object at 0x7f59a552f790>
+transport: <_SelectorSocketTransport closing fd=11>
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 918, in write
+    n = self._sock.send(data)
+OSError: [Errno 9] Bad file descriptor
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/usr/lib/python3.9/asyncio/sslproto.py", line 684, in _process_write_backlog
+    self._transport.write(chunk)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 924, in write
+    self._fatal_error(exc, 'Fatal write error on socket transport')
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 719, in _fatal_error
+    self._force_close(exc)
+  File "/usr/lib/python3.9/asyncio/selector_events.py", line 731, in _force_close
+    self._loop.call_soon(self._call_connection_lost, exc)
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 746, in call_soon
+    self._check_closed()
+  File "/usr/lib/python3.9/asyncio/base_events.py", line 510, in _check_closed
+    raise RuntimeError('Event loop is closed')
+RuntimeError: Event loop is closed
+09-Jun-22 11:11:19 - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f59a552f2e0>
+09-Jun-22 11:11:19 - Unclosed client session
+client_session: <aiohttp.client.ClientSession object at 0x7f59a55b5700>
+09-Jun-22 11:11:19 - Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f59a55d2e20>, 6154.129295311)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f59a552f310>
+09-Jun-22 11:11:19 - Unclosed connector
+connections: ['[(<aiohttp.client_proto.ResponseHandler object at 0x7f59a55d2ee0>, 6154.135080825)]']
+connector: <aiohttp.connector.TCPConnector object at 0x7f59a55b5880>

@@ -14,12 +14,13 @@ import logging
 pd.options.mode.chained_assignment = None
 
 class Bot:
-    def __init__(self, symbol, interval) -> None:
+    def __init__(self, symbol, interval, parent_interval) -> None:
         self.trade_token = symbol[0:-4]
         self.base_token = symbol[-4:]
        
         self.symbol = symbol
         self.interval = interval
+        self.parent_interval = parent_interval
         secret_key = os.getenv('BINANCE_SECRET')
         api_key = os.getenv('BINANCE_API')
         self.hist_df = None 
@@ -127,25 +128,26 @@ class Bot:
 
             self.viz(msg="SELL")
 
-        
-   
 
     ## Streaming 
-    async def kline_listener(self,client):
+    async def kline_listener(self,client, interval):
         bm = BinanceSocketManager(client)
-        async with bm.kline_socket(symbol=self.symbol, interval=self.interval) as stream:
+        async with bm.kline_socket(symbol=self.symbol, interval=interval) as stream:
             while True:
                 res = await stream.recv()
+                print(res)
+                continue
                 if res['k']['x'] == True:
                     self.loop.call_soon(asyncio.create_task, self.process_new_data(res))
               
-    async def streaming(self):
+    async def streaming(self, interval):
         client = await AsyncClient.create()
-        await self.kline_listener(client)
+        await self.kline_listener(client, interval)
 
-    def run(self):
+    async def run(self):
         self.get_historical_datas()
-        self.loop.run_until_complete(self.streaming())
+        all_runs = [self.streaming(self.interval), self.streaming(self.parent_interval)]
+        await asyncio.gather(*all_runs)
 
     def get_historical_datas(self):
         historical = self.client.get_historical_klines(self.symbol,self.interval, self.start_date * 1000) 
