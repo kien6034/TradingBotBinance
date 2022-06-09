@@ -5,7 +5,7 @@ import sys
 import numpy as np 
 
 
-bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1MINUTE)
+bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_3MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
 df= bot.get_historical_datas()
 
 def isSupport(df,i):

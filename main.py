@@ -5,5 +5,5 @@ import numpy as np
 import pandas as pd 
 import sys
 
-bot = Bot('AVAXUSDT', BaseClient.KLINE_INTERVAL_1MINUTE, BaseClient.KLINE_INTERVAL_3MINUTE)
+bot = Bot('LUNCBUSD', BaseClient.KLINE_INTERVAL_1MINUTE, BaseClient.KLINE_INTERVAL_3MINUTE)
 asyncio.run(bot.run())

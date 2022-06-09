@@ -1,6 +1,0 @@
-09-Jun-22 11:39:12 - CANCEL read_loop
-09-Jun-22 11:39:12 - CANCEL read_loop
-09-Jun-22 11:39:12 - Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x7f1267104d60>
-09-Jun-22 11:39:12 - Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x7f12670245e0>

@@ -10,6 +10,7 @@ import mplfinance as mpf
 import time
 from .utils import get_time_diff
 from .strategy1 import strategy1
+from .config import NUM_OF_CANDLES
 import logging
 
 pd.options.mode.chained_assignment = None
@@ -86,33 +87,43 @@ class Bot:
             print(error)
 
     ## API Call 
-    async def process_new_data(self,res):
+    async def process_new_data(self, res, interval):
         data = self.refine_data(res)
-        data_length= len(self.hist_df)
-        self.hist_df.loc[data_length] = data
-        self.hist_df = self.hist_df.iloc[-60:]
+        print(f"========= {interval} ========== \n")
+        if interval == self.parent_interval:
+            df_len = len(self.parent_hist_df)
+            self.parent_hist_df.loc[df_len] = data
+            self.parent_hist_df = self.parent_hist_df.iloc[-NUM_OF_CANDLES:]
+            return
+
+        print(f"{res}")
+        df_len= len(self.hist_df)
+        self.hist_df.loc[df_len] = data
+        self.hist_df = self.hist_df.iloc[-NUM_OF_CANDLES:]
         status = strategy1(self.hist_df)
 
-        logging.info(f"Candel Added: {res}")
         if status == True:
-            logging.info('---------> BUY')
+            logging.info('===========> CAN BUY')
+            logging.info(f"Enter price: {self.hist_df.iloc[-1]}")
             if self.action == 1: 
-                logging.info('--- Already iin longing postion')
+                logging.info('---> Already in longing postion')
                 return
             if self.action == 0:
                 #todo: Get quantity herer
                 logging.info("---> Open long position")
-                self.create_future_market_buy_order(quantity = self.amount)
+                #self.create_future_market_buy_order(quantity = self.amount)
                 self.action = 1
             # if in buy position 
             elif self.action == 2: 
-                logging.info("-----> Close short position")
-                self.create_future_market_buy_order(quantity = self.amount)
+                logging.info("---> Close short position")
+                #self.create_future_market_buy_order(quantity = self.amount)
                 self.action = 0
             
+            logging.info('------------------ \n')
             self.viz(msg="BUY")
         elif status == False:
-            logging.info("-----------> SELL")
+            logging.info("===========> SELL")
+            logging.info(f"Enter price: {self.hist_df.iloc[-1]}")
 
             if self.action == 2:
                 logging.info("---> already in sell position")
@@ -120,15 +131,15 @@ class Bot:
 
             if self.action == 0:
                 logging.info("-----> open short position")
-                self.create_future_market_sell_order(quantity=self.amount)
+                #self.create_future_market_sell_order(quantity=self.amount)
                 self.action = 2
             elif self.action == 1: # longing 
                 logging.info("----->  Close long position")
-                self.create_future_market_sell_order(quantity=self.amount)
+                #self.create_future_market_sell_order(quantity=self.amount)
                 self.action = 0
 
+            logging.info('------------------ \n')
             self.viz(msg="SELL")
-
 
     ## Streaming 
     async def kline_listener(self,client, interval):
@@ -136,10 +147,9 @@ class Bot:
         async with bm.kline_socket(symbol=self.symbol, interval=interval) as stream:
             while True:
                 res = await stream.recv()
-                print(res)
-                continue
+
                 if res['k']['x'] == True:
-                    self.loop.call_soon(asyncio.create_task, self.process_new_data(res))
+                    await self.process_new_data(res, interval)
               
     async def streaming(self, interval):
         client = await AsyncClient.create()
@@ -200,7 +210,6 @@ class Bot:
         baseDir = os.path.dirname("setup.py")
         dirName = os.path.join(baseDir, f"data/{self.symbol}")
         if not os.path.isdir(dirName):
-            pass
             os.makedirs(dirName)
 
       
