@@ -2,8 +2,7 @@ import time
 from .config import NUM_OF_CANDLES
 
 
-def get_start_date(interval):
-        ts = int(time.time())
+def get_time_diff(interval):
         interval_type = interval[-1]
         interval_value = int(interval[0:-1])
        
@@ -17,4 +16,6 @@ def get_start_date(interval):
             value_in_sec = 60 * 60 * 24 * 7
         
         t = interval_value * value_in_sec * NUM_OF_CANDLES
-        return ts - t
+        return t
+
+

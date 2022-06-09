@@ -5,9 +5,10 @@ import pandas as pd
 import numpy as np
 import asyncio
 from binance import AsyncClient, BinanceSocketManager
+from binance.client import BaseClient
 import mplfinance as mpf 
 import time
-from .utils import get_start_date
+from .utils import get_time_diff
 from .strategy1 import strategy1
 import logging
 
@@ -24,7 +25,7 @@ class Bot:
         secret_key = os.getenv('BINANCE_SECRET')
         api_key = os.getenv('BINANCE_API')
         self.hist_df = None 
-        self.start_date = get_start_date(interval)
+        self.parent_hist_df = None
         self.colums= ['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 
                         'Number of Trades']
         self.client = Client(api_key, secret_key)
@@ -146,20 +147,32 @@ class Bot:
 
     async def run(self):
         self.get_historical_datas()
+        self.get_historical_datas(self.parent_interval)
+        print(self.hist_df.tail(2))
+        print(self.parent_hist_df.tail(2))
         all_runs = [self.streaming(self.interval), self.streaming(self.parent_interval)]
         await asyncio.gather(*all_runs)
 
-    def get_historical_datas(self):
-        historical = self.client.get_historical_klines(self.symbol,self.interval, self.start_date * 1000) 
-        hist_df = pd.DataFrame(historical)
+    def get_historical_datas(self, interval = None):
         '''
         (Open time, Open, High, Low, Close, Volume, Close time, Quote asset volume, Number of trades, Taker buy base asset volume, Taker buy quote asset volume, Ignore)
         '''
-        hist_df.columns = ['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 
+        columns = ['Open Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Close Time', 'Quote Asset Volume', 
                             'Number of Trades', 'TB Base Volume', 'TB Quote Volume', 'Ignore']
-
-        self.hist_df = hist_df.drop(columns=['TB Base Volume', 'TB Quote Volume', 'Ignore'])
-        return self.hist_df
+        if interval == None:
+            historical = self.client.get_historical_klines(self.symbol,self.interval,(int(time.time()) - get_time_diff(self.interval)) * 1000) 
+            hist_df = pd.DataFrame(historical)
+            hist_df.columns = columns
+            self.hist_df = hist_df.drop(columns=['TB Base Volume', 'TB Quote Volume', 'Ignore'])
+            return self.hist_df
+        
+        if interval  == self.parent_interval:
+            historical = self.client.get_historical_klines(self.symbol,self.parent_interval, (int(time.time()) - get_time_diff(self.parent_interval))* 1000) 
+            hist_df = pd.DataFrame(historical)
+            hist_df.columns = columns
+            self.parent_hist_df = hist_df.drop(columns=['TB Base Volume', 'TB Quote Volume', 'Ignore'])
+            return self.parent_hist_df
+        
 
 
     def refine_data(self,res):
