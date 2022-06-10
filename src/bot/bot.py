@@ -1,6 +1,7 @@
 from distutils.log import error
 import os 
 from binance import Client, ThreadedWebsocketManager, ThreadedDepthCacheManager
+from matplotlib.pyplot import subplot
 import pandas as pd 
 import numpy as np
 import asyncio
@@ -197,29 +198,31 @@ class Bot:
         number_of_trades = res['k']['n']
         return [open_time, open, high, low, close, volumn, int(close_time), quote_asset_volume, number_of_trades]
     
-    def viz(self, data=pd.DataFrame(), msg = None, hlines = []):
+    def viz(self, data=pd.DataFrame(), msg = None, hlines = [], addplot =[]):
         if data.empty:
             data= self.hist_df
 
+    
         data['Open Time'] = pd.to_datetime(data['Open Time']/1000, unit='s')
         data['Close Time'] = pd.to_datetime(data['Close Time']/1000, unit='s')
         numeric_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Quote Asset Volume']
         data[numeric_columns] = data[numeric_columns].apply(pd.to_numeric, axis=1)
-        data.set_index('Close Time').tail(100)
+        data.set_index('Close Time')
 
         baseDir = os.path.dirname("setup.py")
         dirName = os.path.join(baseDir, f"data/{self.symbol}")
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
-
+    
       
         mpf.plot(
-            data.set_index('Close Time').tail(120), 
+            data.set_index('Close Time'), 
             type='candle', 
             style='charles', 
             volume=True, 
             title=f"{self.symbol} Last {self.interval}", 
             mav=(10,20,30), 
             savefig = f"data/{self.symbol}/{msg}_{data['Close Time'].iloc[-1]}.jpg",
-            hlines=dict(hlines = hlines, linewidths=2,alpha=0.4)
+            hlines=dict(hlines = hlines, linewidths=2,alpha=0.4),
+            addplot=addplot
         )

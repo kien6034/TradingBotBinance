@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_3MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
+bot = Bot('BTCUSDT', BaseClient.KLINE_INTERVAL_1DAY, BaseClient.KLINE_INTERVAL_5MINUTE)
 df= bot.get_historical_datas()
 
 def isSupport(df,i):
