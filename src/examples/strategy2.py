@@ -8,8 +8,8 @@ import pandas as pd
 import mplfinance as mpf
 
 
-symbol = 'LUNABUSD'
-bot = Bot(symbol, BaseClient.KLINE_INTERVAL_1MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
+symbol = 'LUNCBUSD'
+bot = Bot(symbol, BaseClient.KLINE_INTERVAL_3MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
 df= bot.get_historical_datas()
 
 slowk, slowd = talib.STOCH(df['High'], df['Low'], df['Close'], fastk_period=14, slowk_period=1, slowd_period=3)
@@ -42,6 +42,10 @@ df['Selltrigger'] = np.where(gettriggers(df,3, False),1,0)
 df['Buy'] = np.where((df.Buytrigger)  & (df.macd > 0) & (df.rsi > 50),1,0)
 df['Sell'] = np.where((df.Selltrigger) & (df.macd < 0) & (df.rsi < 50),1,0)
 
+df['Buy'].shift(1)
+df['Sell'].shift(1)
+
+
 Buying_dates, Selling_dates = [], []
 
 for i in range(len(df) - 1): 
@@ -53,14 +57,14 @@ for i in range(len(df) - 1):
                 break
 
 
-buy = np.where((df['Buy'] == 1), 1, np.nan) * 1 * df['Low'].astype(float)
-sell = np.where((df['Sell'] == 1), 1, np.nan) * 1 * df['High'].astype(float)
+buy = np.where((df['Buy'] == 1), 1, np.nan) * 0.99 * df['Low'].astype(float)
+sell = np.where((df['Sell'] == 1), 1, np.nan) * 1.01 * df['High'].astype(float)
 
 ap = []
 if not buy.isnull().all():
-    ap.append(mpf.make_addplot(buy, type='scatter', marker='^', markersize=100, color='g'))
+    ap.append(mpf.make_addplot(buy, type='scatter', marker='^', markersize=75, color='g'))
 
 if not sell.isnull().all():
-    ap.append(mpf.make_addplot(sell, type='scatter', marker='v', markersize=100, color='r'))
+    ap.append(mpf.make_addplot(sell, type='scatter', marker='v', markersize=75, color='r'))
 
 bot.viz(df, addplot=ap)

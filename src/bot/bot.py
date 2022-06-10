@@ -11,7 +11,7 @@ import mplfinance as mpf
 import time
 from .utils import get_time_diff
 from .strategy1 import strategy1
-from .config import NUM_OF_CANDLES
+from ..config import NUM_OF_CANDLES
 import logging
 
 pd.options.mode.chained_assignment = None
@@ -202,7 +202,6 @@ class Bot:
         if data.empty:
             data= self.hist_df
 
-    
         data['Open Time'] = pd.to_datetime(data['Open Time']/1000, unit='s')
         data['Close Time'] = pd.to_datetime(data['Close Time']/1000, unit='s')
         numeric_columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Quote Asset Volume']

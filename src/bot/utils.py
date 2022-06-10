@@ -1,5 +1,5 @@
 import time
-from .config import NUM_OF_CANDLES
+from ..config import NUM_OF_CANDLES
 
 
 def get_time_diff(interval):

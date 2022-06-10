@@ -9,7 +9,7 @@ import pandas as pd
 import mplfinance as mpl
 
 
-symbol = 'LINKUSDT'
+symbol = 'LUNCBUSD'
 bot = Bot('LINKUSDT', BaseClient.KLINE_INTERVAL_5MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
 df= bot.get_historical_datas()
 

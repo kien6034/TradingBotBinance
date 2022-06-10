@@ -1,4 +1,4 @@
-from .config import LONG_RSI_TIMEFRAME, SHORT_RSI_TIMEFRAME, EMA_TIMEFRAME
+from ..config import LONG_RSI_TIMEFRAME, SHORT_RSI_TIMEFRAME, EMA_TIMEFRAME
 import talib 
 
 
