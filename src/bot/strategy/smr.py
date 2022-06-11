@@ -37,8 +37,6 @@ def gettriggers(df, buy=True):
 
 def analyze(df):
     df = process_df(df)
-
-
     df['Buytrigger'] = np.where(gettriggers(df),1,0)
     df['Selltrigger'] = np.where(gettriggers(df, False),1,0)
 

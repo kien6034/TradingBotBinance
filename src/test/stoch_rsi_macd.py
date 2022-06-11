@@ -1,11 +1,13 @@
-from ..bot.strategy.stoch_macd_rsi import get_sub_plot_data, analyze
-from src.bot.bot import Bot
+import src.bot.strategy.smr as smr
+from src.test.simulator.bot import Bot
 from binance.client import BaseClient
 import talib
 import sys
 import numpy as np 
 import matplotlib.pyplot as plt
 import pandas as pd
+import src.config as config
+
 
 
 symbol = 'LUNCBUSD'
@@ -13,7 +15,15 @@ bot = Bot(symbol, BaseClient.KLINE_INTERVAL_3MINUTE, BaseClient.KLINE_INTERVAL_5
 df= bot.get_historical_datas()
 
 
-df = analyze(df)
-ap= get_sub_plot_data(df)
+df = smr.analyze(df)
 
-bot.viz(addplot=ap)
+print(df.tail(30))
+print("Back testing")
+"""
+    - Apply entry point with df 
+    - Set stop loss + TP 
+    - Calculatet profit 
+"""
+
+# ap= get_sub_plot_data(df)
+# bot.viz(addplot=ap)
