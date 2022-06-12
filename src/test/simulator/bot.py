@@ -11,6 +11,7 @@ import mplfinance as mpf
 import time
 import src.config as config 
 import src.bot.utils as utils 
+from ...config import MAX_DRAW
 
 import logging
 
@@ -165,7 +166,7 @@ class Bot:
     
       
         mpf.plot(
-            data.set_index('Close Time'), 
+            data.set_index('Close Time').tail(MAX_DRAW), 
             type='candle', 
             style='charles', 
             volume=True, 

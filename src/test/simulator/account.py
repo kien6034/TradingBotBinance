@@ -1,5 +1,6 @@
 from cmath import nan
 import time
+from numpy import take
 import pandas as pd
 import sys
 from ...config import RISK
@@ -11,7 +12,6 @@ class Account:
     def __init__(self, symbol) -> None:
         self.init_balance = 1000
         self.balance = 1000
-        self.actual_balance = 1000
         self.symbol = symbol
         self.trading_data = pd.DataFrame()
         self.trading_infos = {
@@ -28,12 +28,13 @@ class Account:
         return self.balance
 
     
-    def create_order(self, side, entry, stop_loss, order_size, ctime):
+    def create_order(self, side, entry, stop_loss, take_profit, order_size, ctime):
  
         order = {
             "entered_time": datetime.fromtimestamp(int(ctime)),
             "entry": entry,
             "stop_loss": stop_loss,
+            "take_profit": take_profit,
             "size": order_size,
             "side": side,
             "close_time": float('nan'),
@@ -46,6 +47,7 @@ class Account:
                 "entered_time": [datetime.fromtimestamp(ctime)],
                 "entry": [entry],
                 "stop_loss": [stop_loss],
+                "take_profit": [take_profit],
                 "size": [order_size],
                 "side": [side],
                 "close_time": [float('nan')],
@@ -97,14 +99,14 @@ class Account:
         return order_size
 
     ## full sell-buy order
-    def place_order(self, side, entry, stop_loss, ctime= None):
+    def place_order(self, side, entry, stop_loss, take_profit, ctime= None):
         if ctime == None:
             ctime = time.time()
 
         if self.on_trading == 0:
             order_size = self.get_order_size(side, entry, stop_loss)
             # create order 
-            self.create_order(side, entry, stop_loss, order_size, ctime)
+            self.create_order(side, entry, stop_loss, take_profit, order_size, ctime)
 
         elif self.on_trading > 0:
             if side == True:
@@ -122,17 +124,29 @@ class Account:
             self.close_order(entry, ctime)
        
 
-    def update_order(self, price):
+    def update_order(self, price, ctime):
+        if self.trading_data.empty:
+            return 
+
         order = self.trading_data.iloc[-1]
-        
+        if order['close_price'] > 0:
+            return 
+       
+
         stop_loss = order['stop_loss']
+        take_profit = order['take_profit']
         side = order['side']
+
 
         side_value = self.converse_true_false(side)
 
         if side_value * price <= side_value * stop_loss:
             print(" ++_++ Hit stop loss")
-            self.close_order(stop_loss)
+            self.close_order(stop_loss, ctime)
+        
+        elif side_value * price >= side_value * take_profit:
+            print(" ^^ __^^ Hit take profit")
+            self.close_order(take_profit, ctime)
     
 
     ## @dev: Converse true false to 1 and -1

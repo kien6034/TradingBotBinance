@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import mplfinance as mpf
-from ...config import RSI_DIFF, STOCH_HIGH, STOCH_LOW, LAG
+from ...config import RSI_DIFF, STOCH_HIGH, STOCH_LOW, LAG, MAX_DRAW
 
 def process_df(df):
     slowk, slowd = talib.STOCH(df['High'], df['Low'], df['Close'], fastk_period=14, slowk_period=1, slowd_period=3)
@@ -46,6 +46,9 @@ def analyze(df):
 def get_sub_plot_data(df):
     buy = np.where((df['Buy'] == 1), 1, np.nan) * 1 * df['Low'].astype(float)
     sell = np.where((df['Sell'] == 1), 1, np.nan) * 1 * df['High'].astype(float)
+
+    buy = buy.tail(MAX_DRAW)
+    sell = sell.tail(MAX_DRAW)
 
     ap = []
     if not buy.isnull().all():
