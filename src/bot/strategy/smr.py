@@ -44,8 +44,8 @@ def analyze(df):
 
 
 def get_sub_plot_data(df):
-    buy = np.where((df['Buy'] == 1), 1, np.nan) * 0.99 * df['Low'].astype(float)
-    sell = np.where((df['Sell'] == 1), 1, np.nan) * 1.01 * df['High'].astype(float)
+    buy = np.where((df['Buy'] == 1), 1, np.nan) * 1 * df['Low'].astype(float)
+    sell = np.where((df['Sell'] == 1), 1, np.nan) * 1 * df['High'].astype(float)
 
     ap = []
     if not buy.isnull().all():

@@ -3,6 +3,8 @@ import time
 import pandas as pd
 import sys
 from ...config import RISK
+from datetime import datetime
+
 pd.options.mode.chained_assignment = None
 
 class Account:
@@ -26,9 +28,10 @@ class Account:
         return self.balance
 
     
-    def create_order(self, side, entry, stop_loss, order_size):
+    def create_order(self, side, entry, stop_loss, order_size, ctime):
+ 
         order = {
-            "entered_time": time.time(),
+            "entered_time": datetime.fromtimestamp(int(ctime)),
             "entry": entry,
             "stop_loss": stop_loss,
             "size": order_size,
@@ -40,7 +43,7 @@ class Account:
 
         if self.trading_data.empty:
             order = {
-                "entered_time": [time.time()],
+                "entered_time": [datetime.fromtimestamp(ctime)],
                 "entry": [entry],
                 "stop_loss": [stop_loss],
                 "size": [order_size],
@@ -57,7 +60,7 @@ class Account:
         self.on_trading += self.converse_true_false(side) * order_size
         self.trading_infos["total_order"] += 1
 
-    def close_order(self, close_price):
+    def close_order(self, close_price, ctime):
         try:
             order = self.trading_data.iloc[-1]
             entry = order['entry'] 
@@ -65,7 +68,7 @@ class Account:
             side = order['side']
             performance = self.converse_true_false(side) * (close_price - entry)/entry
             order['close_price'] = close_price
-            order['close_time'] = time.time()
+            order['close_time'] = datetime.fromtimestamp(ctime)
             order['performance'] = performance
 
             self.trading_data.iloc[-1] = order
@@ -94,18 +97,21 @@ class Account:
         return order_size
 
     ## full sell-buy order
-    def place_order(self, side, entry, stop_loss):
+    def place_order(self, side, entry, stop_loss, ctime= None):
+        if ctime == None:
+            ctime = time.time()
+
         if self.on_trading == 0:
             order_size = self.get_order_size(side, entry, stop_loss)
             # create order 
-            self.create_order(side, entry, stop_loss, order_size)
+            self.create_order(side, entry, stop_loss, order_size, ctime)
 
         elif self.on_trading > 0:
             if side == True:
                 print("Already in long position")
                 return 
             
-            self.close_order(entry)
+            self.close_order(entry, ctime)
 
             
         elif self.on_trading < 0:
@@ -113,7 +119,7 @@ class Account:
                 print("Already in short position")
                 return 
             
-            self.close_order(entry)
+            self.close_order(entry, ctime)
        
 
     def update_order(self, price):
