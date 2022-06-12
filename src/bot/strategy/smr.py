@@ -56,5 +56,6 @@ def get_sub_plot_data(df):
 
     if not sell.isnull().all():
         ap.append(mpf.make_addplot(sell, type='scatter', marker='v', markersize=75, color='r'))
+    
 
     return ap

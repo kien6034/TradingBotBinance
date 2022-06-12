@@ -3,8 +3,9 @@ import time
 from numpy import take
 import pandas as pd
 import sys
-from ...config import RISK
+from ..config import RISK, SAVE_TO_EXCEL
 from datetime import datetime
+import os
 
 pd.options.mode.chained_assignment = None
 
@@ -20,6 +21,8 @@ class Account:
             "lose": 0,
             "performance":0,
         }
+
+        self.trade_id = time.time()
 
         self.on_trading = 0
 
@@ -91,6 +94,14 @@ class Account:
         self.trading_infos['performance'] = ((win + lose - 1) * (avg_performance ) + performance) / (win + lose)
         self.on_trading = 0
 
+        if SAVE_TO_EXCEL:
+            baseDir = os.path.dirname("setup.py")
+            dirName = os.path.join(baseDir, f"data/trades/{self.symbol}")
+            if not os.path.isdir(dirName):
+                os.makedirs(dirName)
+            
+            self.trading_data.to_csv(f"{dirName}/{self.trade_id}.csv")
+
 
     ## @param: side: True ~ Long, False: Short
     def get_order_size(self, side, entry, stop_loss):
@@ -110,7 +121,6 @@ class Account:
 
         elif self.on_trading > 0:
             if side == True:
-                print("Already in long position")
                 return 
             
             self.close_order(entry, ctime)
@@ -118,7 +128,6 @@ class Account:
             
         elif self.on_trading < 0:
             if side == False:
-                print("Already in short position")
                 return 
             
             self.close_order(entry, ctime)
@@ -139,14 +148,14 @@ class Account:
 
 
         side_value = self.converse_true_false(side)
-
-        if side_value * price <= side_value * stop_loss:
-            print(" ++_++ Hit stop loss")
-            self.close_order(stop_loss, ctime)
         
-        elif side_value * price >= side_value * take_profit:
-            print(" ^^ __^^ Hit take profit")
-            self.close_order(take_profit, ctime)
+        if stop_loss > 0:
+            if side_value * price <= side_value * stop_loss:
+                self.close_order(stop_loss, ctime)
+        
+        if take_profit >0:
+            if side_value * price >= side_value * take_profit:
+                self.close_order(take_profit, ctime)
     
 
     ## @dev: Converse true false to 1 and -1
@@ -156,3 +165,6 @@ class Account:
 
     def get_actual_balance(self, price):
         return self.balance + self.on_trading * price
+
+
+    

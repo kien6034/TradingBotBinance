@@ -8,7 +8,7 @@ import pandas as pd
 import mplfinance as mpf
 
 
-symbol = 'LUNCBUSD'
+symbol = 'LUNABUSD'
 bot = Bot(symbol, BaseClient.KLINE_INTERVAL_3MINUTE, BaseClient.KLINE_INTERVAL_5MINUTE)
 df= bot.get_historical_datas()
 

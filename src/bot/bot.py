@@ -11,7 +11,7 @@ import mplfinance as mpf
 import time
 from .utils import get_time_diff
 from .strategy1 import strategy1
-from ..config import NUM_OF_CANDLES
+from ..config import NUM_OF_CANDLES, MAX_DRAW
 import logging
 
 pd.options.mode.chained_assignment = None
@@ -198,7 +198,7 @@ class Bot:
         number_of_trades = res['k']['n']
         return [open_time, open, high, low, close, volumn, int(close_time), quote_asset_volume, number_of_trades]
     
-    def viz(self, data=pd.DataFrame(), msg = None, hlines = [], addplot =[]):
+    def viz(self, data=pd.DataFrame(), msg = "", hlines = [], addplot =[]):
         if data.empty:
             data= self.hist_df
 
@@ -209,19 +209,19 @@ class Bot:
         data.set_index('Close Time')
 
         baseDir = os.path.dirname("setup.py")
-        dirName = os.path.join(baseDir, f"data/{self.symbol}")
+        dirName = os.path.join(baseDir, f"data/images/{self.symbol}")
         if not os.path.isdir(dirName):
             os.makedirs(dirName)
     
       
         mpf.plot(
-            data.set_index('Close Time'), 
+            data.set_index('Close Time').tail(MAX_DRAW), 
             type='candle', 
             style='charles', 
             volume=True, 
             title=f"{self.symbol} Last {self.interval}", 
             mav=(10,20,30), 
-            savefig = f"data/{self.symbol}/{msg}_{data['Close Time'].iloc[-1]}.jpg",
+            savefig = f"{dirName}/{msg}_{data['Close Time'].iloc[-1]}.jpg",
             hlines=dict(hlines = hlines, linewidths=2,alpha=0.4),
             addplot=addplot
         )

@@ -1,4 +1,4 @@
-from src.test.simulator.account import Account
+from src.simulator.account import Account
 import sys  
 
 

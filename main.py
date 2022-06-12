@@ -6,4 +6,6 @@ import pandas as pd
 import sys
 
 bot = Bot('LUNCBUSD', BaseClient.KLINE_INTERVAL_1MINUTE, BaseClient.KLINE_INTERVAL_3MINUTE)
-asyncio.run(bot.run())
+bot.get_historical_datas()
+
+bot.viz()
