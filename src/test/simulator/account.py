@@ -1,73 +1,138 @@
 from cmath import nan
-import time 
-import pandas as pd 
+import time
+import pandas as pd
 import sys
-
+from ...config import RISK
+pd.options.mode.chained_assignment = None
 
 class Account:
     def __init__(self, symbol) -> None:
         self.init_balance = 1000
-        self.balance = 1000 
+        self.balance = 1000
+        self.actual_balance = 1000
         self.symbol = symbol
         self.trading_data = pd.DataFrame()
-        self.open_orders = []
-       
+        self.trading_infos = {
+            "total_order": 0,
+            "win": 0,
+            "lose": 0,
+            "performance":0,
+        }
+
+        self.on_trading = 0
+
 
     def get_balance(self):
-        return self.balance 
+        return self.balance
 
-    def get_open_orders(self):
-        return self.open_orders
-
-    # Side == True ~~ Long 
-    def place_order(self,order_id, entry, side=True):
-        size = self.balance / 10 / entry ## enter 10% of the account 
-        
+    
+    def create_order(self, side, entry, stop_loss, order_size):
         order = {
-            "order_id": order_id,
             "entered_time": time.time(),
             "entry": entry,
-            "size": size,
+            "stop_loss": stop_loss,
+            "size": order_size,
             "side": side,
             "close_time": float('nan'),
             'close_price': float('nan'),
+            'performance': float('nan')
         }
 
         if self.trading_data.empty:
             order = {
-                "order_id": [order_id],
                 "entered_time": [time.time()],
                 "entry": [entry],
-                "size": [size],
+                "stop_loss": [stop_loss],
+                "size": [order_size],
                 "side": [side],
                 "close_time": [float('nan')],
-                'close_price': [float('nan')]
+                'close_price': [float('nan')],
+                'performance': [float('nan')]
             }
             self.trading_data = pd.DataFrame(order)
-            self.trading_data.set_index("order_id", inplace=True)
         else:
             self.trading_data = pd.concat([self.trading_data, pd.DataFrame.from_records([order])])
-            self.trading_data.set_index("order_id", inplace=True)
-        
-        self.balance -= entry * size 
-        self.open_orders.append(order_id)
 
-    def close_order(self, order_id, close_price, close_time):
+        self.balance -= self.converse_true_false(side) *  entry * order_size
+        self.on_trading += self.converse_true_false(side) * order_size
+        self.trading_infos["total_order"] += 1
+
+    def close_order(self, close_price):
         try:
-            self.trading_data.loc[order_id, ["close_price"]] = [close_price]
-            self.trading_data.loc[order_id, ["close_time"]] = [close_time]
-            self.open_orders.remove(order_id)
+            order = self.trading_data.iloc[-1]
+            entry = order['entry'] 
+            size = order['size']
+            side = order['side']
+            performance = self.converse_true_false(side) * (close_price - entry)/entry
+            order['close_price'] = close_price
+            order['close_time'] = time.time()
+            order['performance'] = performance
+
+            self.trading_data.iloc[-1] = order
+            self.balance += self.converse_true_false(side)  * size * close_price
         except:
-            print("Order not existed")
-            sys.exit()
+            print("Close order error")
+            pass 
+       
+        if performance > 0:
+            self.trading_infos['win'] += 1
+        else:
+            self.trading_infos['lose'] += 1
 
-        self.balance += self.trading_data.loc[order_id]['size']
+        win =  self.trading_infos['win']
+        lose = self.trading_infos['lose']
+        avg_performance = self.trading_infos['performance']
+
+        self.trading_infos['performance'] = ((win + lose - 1) * (avg_performance ) + performance) / (win + lose)
+        self.on_trading = 0
+
+
+    ## @param: side: True ~ Long, False: Short
+    def get_order_size(self, side, entry, stop_loss):
+        w_performance = self.converse_true_false(side) * (stop_loss - entry) / entry
+        order_size =  -1* (RISK *self.balance) / w_performance / entry
+        return order_size
+
+    ## full sell-buy order
+    def place_order(self, side, entry, stop_loss):
+        if self.on_trading == 0:
+            order_size = self.get_order_size(side, entry, stop_loss)
+            # create order 
+            self.create_order(side, entry, stop_loss, order_size)
+
+        elif self.on_trading > 0:
+            if side == True:
+                print("Already in long position")
+                return 
+            
+            self.close_order(entry)
+
+            
+        elif self.on_trading < 0:
+            if side == False:
+                print("Already in short position")
+                return 
+            
+            self.close_order(entry)
+       
+
+    def update_order(self, price):
+        order = self.trading_data.iloc[-1]
         
+        stop_loss = order['stop_loss']
+        side = order['side']
 
-    def get_trading_data(self):
-        return self.trading_data
+        side_value = self.converse_true_false(side)
 
-    # def save_trading_data(self):
-    #     self.trading_data.to_csv()
-
+        if side_value * price <= side_value * stop_loss:
+            print(" ++_++ Hit stop loss")
+            self.close_order(stop_loss)
     
+
+    ## @dev: Converse true false to 1 and -1
+    def converse_true_false(self, side):
+        return (-1 + int(side) * 2)
+
+
+    def get_actual_balance(self, price):
+        return self.balance + self.on_trading * price

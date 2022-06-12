@@ -3,9 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import mplfinance as mpf
-from ...config import STOCH_HIGH, STOCH_LOW, LAG
-
-
+from ...config import RSI_DIFF, STOCH_HIGH, STOCH_LOW, LAG
 
 def process_df(df):
     slowk, slowd = talib.STOCH(df['High'], df['Low'], df['Close'], fastk_period=14, slowk_period=1, slowd_period=3)
@@ -18,7 +16,6 @@ def process_df(df):
     df["macd"] = macdhist
     df.dropna(inplace=True)
     return df
-
 
 
 # Lagging
@@ -41,11 +38,8 @@ def analyze(df):
     df['Selltrigger'] = np.where(gettriggers(df, False),1,0)
 
     # LOGIC TO TRIGGER BUY OR SELL
-    df['Buy'] = np.where((df.Buytrigger)  & (df.macd > 0) & (df.rsi > 50),1,0)
-    df['Sell'] = np.where((df.Selltrigger) & (df.macd < 0) & (df.rsi < 50),1,0)
-
-    df['Buy'].shift(1)
-    df['Sell'].shift(1)
+    df['Buy'] = np.where((df.Buytrigger)  & (df.macd > 0) & (df.rsi > 35),1,0)
+    df['Sell'] = np.where((df.Selltrigger) & (df.macd < 0) & (df.rsi < 65),1,0)
     return df
 
 

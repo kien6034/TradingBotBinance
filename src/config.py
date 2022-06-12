@@ -1,7 +1,13 @@
+## Account config 
+RISK = 0.02
+
+
+
 ## MACD - STOCH - RSI 
 STOCH_HIGH=75
 STOCH_LOW=25
 LAG=3
+RSI_DIFF = 30
 
 ## EMA - RSI 
 SHORT_RSI_TIMEFRAME = 7
